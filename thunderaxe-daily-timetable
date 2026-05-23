@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Timetable</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --gold: #f5c542;
+    --purple: #7c3aed;
+    --cyan: #22d3ee;
+    --green: #22c55e;
+    --pink: #f472b6;
+    --orange: #fb923c;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --yellow: #fde68a;
+    --text: #e2e8f0;
+    --muted: #64748b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding: 32px 16px 60px;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(124,58,237,0.15), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(34,211,238,0.06), transparent);
+  }
+  .container { max-width: 700px; margin: 0 auto; }
+
+  .header { text-align: center; margin-bottom: 36px; animation: fadeDown 0.6s ease both; }
+  .header-label { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-bottom: 10px; }
+  .header h1 { font-family: 'Syne', sans-serif; font-size: clamp(28px, 6vw, 44px); font-weight: 800; background: linear-gradient(135deg, #fff 30%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1; margin-bottom: 12px; }
+  .meta-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; font-size: 11px; color: var(--muted); font-family: 'Space Mono', monospace; }
+  .meta-pill { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; white-space: nowrap; }
+
+  .block { margin-bottom: 24px; animation: fadeUp 0.5s ease both; }
+  .block:nth-child(2){animation-delay:.08s} .block:nth-child(3){animation-delay:.13s}
+  .block:nth-child(4){animation-delay:.18s} .block:nth-child(5){animation-delay:.23s}
+  .block:nth-child(6){animation-delay:.28s} .block:nth-child(7){animation-delay:.33s}
+  .block:nth-child(8){animation-delay:.38s} .block:nth-child(9){animation-delay:.43s}
+  .block:nth-child(10){animation-delay:.48s} .block:nth-child(11){animation-delay:.53s}
+
+  .block-header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 10px 10px 0 0; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+  .block-header.morning  { background: rgba(245,197,66,0.12);  border-left: 3px solid var(--gold);   color: var(--gold); }
+  .block-header.posting  { background: rgba(251,146,60,0.12);  border-left: 3px solid var(--orange); color: var(--orange); }
+  .block-header.hustle   { background: rgba(96,165,250,0.12);  border-left: 3px solid var(--blue);   color: var(--blue); }
+  .block-header.rest-blk { background: rgba(34,197,94,0.1);    border-left: 3px solid var(--green);  color: var(--green); }
+  .block-header.evening  { background: rgba(34,211,238,0.12);  border-left: 3px solid var(--cyan);   color: var(--cyan); }
+  .block-header.youtube  { background: rgba(248,113,113,0.1);  border-left: 3px solid var(--red);    color: var(--red); }
+  .block-header.discord  { background: rgba(124,58,237,0.12);  border-left: 3px solid var(--purple); color: #a78bfa; }
+  .block-header.night    { background: rgba(244,114,182,0.12); border-left: 3px solid var(--pink);   color: var(--pink); }
+  .block-header.sleep    { background: rgba(253,230,138,0.08); border-left: 3px solid var(--yellow); color: var(--yellow); }
+
+  .timetable { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; overflow: hidden; }
+  .timetable thead th { background: rgba(255,255,255,0.03); padding: 8px 14px; font-size: 10px; font-family: 'Space Mono', monospace; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); text-align: left; border-bottom: 1px solid var(--border); }
+  .timetable tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
+  .timetable tbody tr:last-child { border-bottom: none; }
+  .timetable tbody tr:hover { background: rgba(255,255,255,0.03); }
+  .timetable td { padding: 11px 14px; font-size: 13px; vertical-align: middle; }
+  .time-col { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); white-space: nowrap; width: 130px; }
+  .activity-col { font-weight: 500; color: var(--text); }
+  .activity-col span { font-size: 11.5px; color: var(--muted); display: block; margin-top: 2px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 20px; font-family: 'Space Mono', monospace; white-space: nowrap; }
+  .badge.influencer { background: rgba(124,58,237,0.2);  color: #c4b5fd; border: 1px solid rgba(124,58,237,0.3); }
+  .badge.web2       { background: rgba(96,165,250,0.15); color: var(--blue);   border: 1px solid rgba(96,165,250,0.3); }
+  .badge.web3       { background: rgba(34,211,238,0.15); color: var(--cyan);   border: 1px solid rgba(34,211,238,0.3); }
+  .badge.memecoin   { background: rgba(34,197,94,0.15);  color: var(--green);  border: 1px solid rgba(34,197,94,0.3); }
+  .badge.jobs       { background: rgba(251,146,60,0.15); color: var(--orange); border: 1px solid rgba(251,146,60,0.3); }
+  .badge.thread     { background: rgba(99,102,241,0.2);  color: #a5b4fc;       border: 1px solid rgba(99,102,241,0.3); }
+  .badge.space      { background: rgba(34,211,238,0.12); color: var(--cyan);   border: 1px solid rgba(34,211,238,0.25); }
+  .badge.draft      { background: rgba(255,255,255,0.07);color: #94a3b8;       border: 1px solid rgba(255,255,255,0.1); }
+  .badge.plan       { background: rgba(245,197,66,0.1);  color: var(--gold);   border: 1px solid rgba(245,197,66,0.2); }
+  .badge.jobhunt    { background: rgba(96,165,250,0.15); color: var(--blue);   border: 1px solid rgba(96,165,250,0.3); }
+  .badge.disc       { background: rgba(124,58,237,0.15); color: #a78bfa;       border: 1px solid rgba(124,58,237,0.25); }
+  .badge.rest       { background: rgba(34,197,94,0.1);   color: var(--green);  border: 1px solid rgba(34,197,94,0.2); }
+  .badge.sleep      { background: rgba(253,230,138,0.1); color: var(--yellow); border: 1px solid rgba(253,230,138,0.2); }
+  .badge.replies    { background: rgba(244,114,182,0.15);color: var(--pink);   border: 1px solid rgba(244,114,182,0.3); }
+  .badge.yt         { background: rgba(248,113,113,0.15);color: var(--red);    border: 1px solid rgba(248,113,113,0.3); }
+
+  .checklist-section { margin-top: 36px; animation: fadeUp 0.5s ease 0.6s both; }
+  .checklist-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: var(--green); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .percent-display { text-align: center; margin-bottom: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px 16px; position: relative; overflow: hidden; }
+  .percent-display::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(34,197,94,0.04), rgba(34,211,238,0.04)); pointer-events: none; }
+  .percent-number { font-family: 'Syne', sans-serif; font-size: clamp(52px, 14vw, 80px); font-weight: 800; line-height: 1; background: linear-gradient(135deg, var(--green), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; transition: all 0.4s ease; }
+  .percent-label { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-top: 6px; }
+  .percent-sub { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .progress-bar { height: 6px; background: rgba(255,255,255,0.07); border-radius: 10px; overflow: hidden; margin-top: 16px; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--cyan)); border-radius: 10px; transition: width 0.5s cubic-bezier(.4,0,.2,1); }
+  .complete-banner { display: none; text-align: center; padding: 14px; background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,211,238,0.15)); border: 1px solid rgba(34,197,94,0.3); border-radius: 10px; margin-bottom: 16px; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--green); animation: pulse 1.5s ease infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+  .checklist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 480px) { .checklist-grid { grid-template-columns: 1fr; } }
+  .check-item { display: flex; align-items: flex-start; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; cursor: pointer; transition: border-color 0.2s, background 0.2s; user-select: none; }
+  .check-item:hover { border-color: rgba(255,255,255,0.15); }
+  .check-item.done { background: rgba(34,197,94,0.05); border-color: rgba(34,197,94,0.2); }
+  .checkbox { width: 16px; height: 16px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .checkbox.checked { background: var(--green); border-color: var(--green); }
+  .checkbox.checked::after { content: '✓'; font-size: 10px; color: #000; font-weight: 700; }
+  .check-label { color: var(--text); line-height: 1.4; }
+  .check-label.striked { text-decoration: line-through; color: var(--muted); }
+  .check-label small { color: var(--muted); font-family: 'Space Mono', monospace; font-size: 11px; }
+  .tips-section { margin-top: 28px; background: rgba(245,197,66,0.05); border: 1px solid rgba(245,197,66,0.2); border-radius: 12px; padding: 20px; animation: fadeUp 0.5s ease 0.7s both; }
+  .tips-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: var(--gold); margin-bottom: 12px; }
+  .tip { font-size: 13px; color: #94a3b8; line-height: 1.6; margin-bottom: 8px; padding-left: 16px; position: relative; }
+  .tip::before { content: '→'; position: absolute; left: 0; color: var(--gold); font-size: 11px; top: 2px; }
+
+  @keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeUp   { from { opacity:0; transform:translateY(20px);  } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-label">📅 Daily Schedule</div>
+    <h1>My Daily<br>Timetable</h1>
+    <div class="meta-row">
+      <span class="meta-pill">🌍 WAT</span>
+      <span class="meta-pill">Posts: 9:07 AM – 7:44 PM</span>
+      <span class="meta-pill">Rest: 5–6 PM</span>
+      <span class="meta-pill">Spaces: 8–10:30 PM</span>
+      <span class="meta-pill">YouTube: 10:30 PM – 12:30 AM</span>
+      <span class="meta-pill">😴 2 AM – 8:30 AM</span>
+    </div>
+  </div>
+
+  <!-- MORNING -->
+  <div class="block">
+    <div class="block-header morning">☀️ &nbsp;Morning — Wake Up & Plan</div>
+    <table class="timetable">
+      <thead><tr><th>TIME (WAT)</th><th>ACTIVITY</th><th>CATEGORY</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="time-col">8:30 AM</td>
+          <td class="activity-col">Wake up, freshen up, breakfast</td>
+          <td><span class="badge plan">🌅 Morning</span></td>
+        </tr>
+        <tr>
+          <td class="time-col">9:00 AM</td>
+          <td class="activity-col">Review yesterday's engagement & plan the day</td>
+          <td><span class="badge plan">📊 Review</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- MORNING POSTS -->
+  <div class="block">
+    <div class="block-header posting">🚀 &nbsp;Morning Posts — 9:07 AM to 12:28 PM</div>
+    <table class="timetable">
+      <thead><tr><th>TIME (WAT)</th><th>ACTIVITY</th><th>CATEGORY</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="time-col">9:07 AM</td>
+          <td class="activity-col">Influencer Repost — web3righteous</td>
+          <td><span class="badge influencer">🔁 Influencer</span></td>
+        </tr>
+        <tr>
+          <td class="time-col">10:02 AM</td>
+          <td class="activity-col">Web2 Banger #1 🌐 <span>Hot take, viral angle — broad audience appeal</span></td>
+          <td><span class="badge web2">🌐 Web2 Banger</span></td>
+        </tr>
+        <tr>
+          <td class="time-col">11:03 AM</td>
+          <td class="activity-col">Influencer Repost — ola_crrypt</td>
+          <td><span class="badge influencer">🔁 Influencer</span></td>
+        </tr>
+        <tr>
+          <td class="time-col">11:44 AM</td>
+          <td class="activity-col">Web3 Banger #1 ⚡ <span>Crypto insight, bold take — speaks to the culture</span></td>
+          <td><span class="badge web3">⚡ Web3 Banger</span></td>
+        </tr>
+        <tr>
+          <td class="time-col">12:28 PM</td>
+          <td class="activity-col">Thread 🧵 <span>In-depth take — educate, entertain or provoke</span></td>
+          <td><span class="badge thread">🧵 Thread</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- JOB HUNTING -->
+  <div class="block">
+    <div class="block-header hustle">💼 &nbsp;Early Noon — Job Hunting</div>
+    <table class="timetable">
+      <thead><tr><th>TIME (WAT)</th><th>ACTIVITY</th><th>CATEGORY</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="time-col">12:30 – 2:30 PM</td>
+          <td class="activity-col">Job Hunting 🔍 <span>Apply, research boards, cold DM founders & hiring managers</span></td>
+          <td><span class="badge jobhunt">💼 Job Hunt</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- AFTERNOON POSTS -->
+  <div class="block">
+    <div class="block-header posting">🌤️ &nbsp;Afternoon Posts — 2:41 PM to 4:58 PM</div>
+    <table class="timetable">
+      <thead><tr><th>TIME (WAT)</th><th>ACTIVITY</th><th>CATEGORY</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="time-col">2:41 PM</td>
+          <td class="activity-col">Influencer Repost — starplatinum</td>
+          <td><span class="badge influencer">🔁 Influencer</span></td>
+        </tr>
+        <tr>
+          <td class="time-col">3:19 PM</td>
+          <td class="activity-col">Web3 Banger #2 ⚡ <span>Spicy opinion, narrative play or alpha drop</span></td>
+          <td><span class="badge web3">⚡ Web3 Banger</span></td>
+        </tr>
+        <tr>
+          <td class="time-col">3:58 PM</td>
+          <td class="activity-col">Influencer Repost — daumeneth</td>
+          <td><span class="badge influencer">🔁 Influencer</span></td>
+        </tr>
+        <tr>
+          <td class="time-col">4:31 PM</td>
+          <td class="activity-col">Web2 Banger #2 🌐 <span>Relatable, shareable — pull in the non-crypto crowd</span></td>
+          <td><span class="badge web2">🌐 Web2 Banger</span></td>
+        </tr>
+        <tr>
+          <td class="time-col">4:58 PM</td>
+          <td class="activity-col">Web3 Job Tip 💼 <span>Drop a job or opportunity for the community</span></td>
+          <td><span class="badge jobs">💼 Web3 Jobs</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- REST -->
+  <div class="block">
+    <div class="block-header rest-blk">😮‍💨 &nbsp;Rest Block — 5:00 to 6:00 PM</div>
+    <table class="timetable">
+      <thead><tr><th>TIME (WAT)</th><th>ACTIVITY</th><th>CATEGORY</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="time-col">5:00 – 6:00 PM</td>
+          <td class="activity-col">Rest & Recharge 🛌 <span>Nap, chill, step outside — protect your energy</span></td>
+          <td><span class="badge rest">💚 Rest</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- EVENING POSTS -->
+  <div class="block">
+    <div class="block-header posting">🌆 &nbsp;Evening Posts — 6:09 PM to 7:44 PM</div>
+    <table class="timetable">
+      <thead><tr><th>TIME (WAT)</th><th>ACTIVITY</th><th>CATEGORY</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="time-col">6:09 PM</td>
+          <td class="activity-col">Memecoin Tip 🐸 <span>Hot call or insight on memecoins</span></td>
+          <td><span class="badge memecoin">🐸 Memecoins</span></td>
+        </tr>
+        <tr>
+          <td class="time-col">6:51 PM</td>
+          <td class="activity-col">Influencer Repost — web3 nigeria</td>
+          <td><span class="badge influencer">🔁 Influencer</span></td>
+        </tr>
+        <tr>
+          <td class="time-col">7:44 PM</td>
+          <td class="activity-col">Influencer Repost — stu</td>
+          <td><span class="badge influencer">🔁 Influencer</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SPACES -->
+  <div class="block">
+    <div class="block-header evening">🎙️ &nbsp;Evening — Spaces + 500 Replies</div>
+    <table class="timetable">
+      <thead><tr><th>TIME (WAT)</th><th>ACTIVITY</th><th>CATEGORY</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="time-col">8:00 – 9:00 PM</td>
+          <td class="activity-col">Host your own Space 🎙️ <span>Lead the convo, build authority</span></td>
+          <td><span class="badge space">🎙️ Host Space</span></td>
+        </tr>
+        <tr>
+          <td class="time-col">9:00 PM ✅</td>
+          <td class="activity-col">500 Replies done for the day 💬 <span>Tick this off once you've hit 500 replies today</span></td>
+          <td><span class="badge replies">💬 500 Replies</span></td>
+        </tr>
+        <tr>
+          <td class="time-col">9:00 – 10:30 PM</td>
+          <td class="activity-col">Join others' Spaces 🎧 <span>Listener or speaker — network and learn</span></td>
+          <td><span class="badge space">🎧 Join Spaces</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- YOUTUBE -->
+  <div class="block">
+    <div class="block-header youtube">🎬 &nbsp;YouTube Content — 10:30 PM to 12:30 AM</div>
+    <table class="timetable">
+      <thead><tr><th>TIME (WAT)</th><th>ACTIVITY</th><th>CATEGORY</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="time-col">10:30 PM – 12:30 AM</td>
+          <td class="activity-col">YouTube Content Creation 🎬 <span>Script, record, edit or plan next video</span></td>
+          <td><span class="badge yt">🎬 YouTube</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- DISCORD + DRAFT -->
+  <div class="block">
+    <div class="block-header discord">🎮 &nbsp;Night — Discord Outreach + Draft Posts</div>
+    <table class="timetable">
+      <thead><tr><th>TIME (WAT)</th><th>ACTIVITY</th><th>CATEGORY</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="time-col">12:30 – 1:15 AM</td>
+          <td class="activity-col">Discord Outreach — 50 DMs 💬 <span>Network, build connections, introduce yourself</span></td>
+          <td><span class="badge disc">🎮 Discord</span></td>
+        </tr>
+        <tr>
+          <td class="time-col">1:15 – 2:00 AM</td>
+          <td class="activity-col">Draft all posts for next day ✍️ <span>Write, schedule, queue via Typefully or Hypefury</span></td>
+          <td><span class="badge draft">✍️ Draft Posts</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SLEEP -->
+  <div class="block">
+    <div class="block-header sleep">😴 &nbsp;Sleep — 2:00 AM to 8:30 AM (6h 30m)</div>
+    <table class="timetable">
+      <thead><tr><th>TIME (WAT)</th><th>ACTIVITY</th><th>CATEGORY</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="time-col">2:00 – 8:30 AM</td>
+          <td class="activity-col">Sleep 😴 <span>Non-negotiable — your brain needs this to perform</span></td>
+          <td><span class="badge sleep">😴 Sleep</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- CHECKLIST -->
+  <div class="checklist-section">
+    <div class="checklist-title">✅ Daily Checklist</div>
+    <div class="percent-display">
+      <div class="percent-number" id="percent-number">0%</div>
+      <div class="percent-label">Daily Completion</div>
+      <div class="percent-sub" id="percent-sub">0 of 21 tasks done</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+    <div class="complete-banner" id="complete-banner">🎉 100% — THAT'S A PERFECT DAY. LFG! 🔥</div>
+    <div class="checklist-grid" id="checklist"></div>
+  </div>
+
+  <!-- TIPS -->
+  <div class="tips-section">
+    <div class="tips-title">💡 Pro Tips</div>
+    <div class="tip">Web2 banger in the morning pulls a broad crowd in — funnel them into your Web3 content later in the day.</div>
+    <div class="tip">Alternating Web2 & Web3 bangers keeps your feed dynamic and hits different audiences at different times.</div>
+    <div class="tip">Spread your 500 replies across the day — don't try to do them all at once. Tick it off at 9 PM.</div>
+    <div class="tip">YouTube block at 10:30 PM is deep work territory — no distractions, full creative focus.</div>
+    <div class="tip">Discord outreach at 1 AM catches people across different timezones who are active globally at night.</div>
+    <div class="tip">Schedule all posts during your 1:15 AM block via Typefully — wake up and content is already going out.</div>
+  </div>
+
+</div>
+
+<script>
+const items = [
+  { label: "Reviewed yesterday's engagement", time: "9:00 AM" },
+  { label: "Influencer Repost #1 — web3righteous", time: "9:07 AM" },
+  { label: "Web2 Banger #1 live 🌐", time: "10:02 AM" },
+  { label: "Influencer Repost #2 — ola_crrypt", time: "11:03 AM" },
+  { label: "Web3 Banger #1 live ⚡", time: "11:44 AM" },
+  { label: "Thread posted 🧵", time: "12:28 PM" },
+  { label: "Job hunting done (2 hrs) 🔍", time: "12:30 – 2:30 PM" },
+  { label: "Influencer Repost #3 — starplatinum", time: "2:41 PM" },
+  { label: "Web3 Banger #2 live ⚡", time: "3:19 PM" },
+  { label: "Influencer Repost #4 — daumeneth", time: "3:58 PM" },
+  { label: "Web2 Banger #2 live 🌐", time: "4:31 PM" },
+  { label: "Web3 Job Tip posted 💼", time: "4:58 PM" },
+  { label: "Rest taken 😮‍💨", time: "5:00 – 6:00 PM" },
+  { label: "Memecoin Tip posted 🐸", time: "6:09 PM" },
+  { label: "Influencer Repost #5 — web3 nigeria", time: "6:51 PM" },
+  { label: "Influencer Repost #6 — stu", time: "7:44 PM" },
+  { label: "Space hosted 🎙️", time: "8:00 – 9:00 PM" },
+  { label: "500 Replies done 💬", time: "9:00 PM" },
+  { label: "Joined other Spaces 🎧", time: "9:00 – 10:30 PM" },
+  { label: "YouTube content done 🎬", time: "10:30 PM – 12:30 AM" },
+  { label: "Discord DMs sent (50 people) 🎮", time: "12:30 – 1:15 AM" },
+  { label: "Next day posts drafted ✍️", time: "1:15 – 2:00 AM" },
+];
+
+const grid = document.getElementById('checklist');
+const fill = document.getElementById('progress-fill');
+const percentNum = document.getElementById('percent-number');
+const percentSub = document.getElementById('percent-sub');
+const banner = document.getElementById('complete-banner');
+const STORAGE_KEY = 'txChecklist_v8';
+
+function getToday() { return new Date().toISOString().split('T')[0]; }
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    const data = JSON.parse(raw);
+    if (data.date !== getToday()) return {};
+    return data.checks || {};
+  } catch { return {}; }
+}
+function saveState(checks) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ date: getToday(), checks }));
+}
+function updateProgress() {
+  const boxes = grid.querySelectorAll('.checkbox');
+  const total = boxes.length;
+  const done = [...boxes].filter(b => b.classList.contains('checked')).length;
+  const pct = Math.round((done / total) * 100);
+  fill.style.width = pct + '%';
+  percentNum.textContent = pct + '%';
+  percentSub.textContent = `${done} of ${total} tasks done`;
+  banner.style.display = pct === 100 ? 'block' : 'none';
+}
+
+const saved = loadState();
+items.forEach((item, i) => {
+  const div = document.createElement('div');
+  div.className = 'check-item' + (saved[i] ? ' done' : '');
+  const checked = saved[i] || false;
+  div.innerHTML = `
+    <div class="checkbox ${checked ? 'checked' : ''}" data-i="${i}"></div>
+    <div class="check-label ${checked ? 'striked' : ''}">${item.label}<br><small>${item.time}</small></div>
+  `;
+  grid.appendChild(div);
+});
+
+updateProgress();
+
+grid.addEventListener('click', e => {
+  const item = e.target.closest('.check-item');
+  if (!item) return;
+  const cb = item.querySelector('.checkbox');
+  const label = item.querySelector('.check-label');
+  cb.classList.toggle('checked');
+  label.classList.toggle('striked');
+  item.classList.toggle('done');
+  const s = loadState();
+  s[cb.dataset.i] = cb.classList.contains('checked');
+  saveState(s);
+  updateProgress();
+});
+</script>
+</body>
+</html>
